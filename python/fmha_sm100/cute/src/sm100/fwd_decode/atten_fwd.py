@@ -1536,8 +1536,8 @@ class SparseDecodeAttentionForwardSm100:
             tOtO1_t2r_i = tOtO1_t2r[None, 0, 0, col_pass_idx]
             tOsO_r2s_i = tOsO_s2r[None, 0, 0, col_pass_idx]
             frg_shape = tOcO_t2r[None, 0, 0, col_pass_idx].shape
-            tOrO0_frg = cute.make_fragment(frg_shape, self.pv_acc_dtype)
-            tOrO1_frg = cute.make_fragment(frg_shape, self.pv_acc_dtype)
+            tOrO0_frg = cute.make_rmem_tensor(frg_shape, self.pv_acc_dtype)
+            tOrO1_frg = cute.make_rmem_tensor(frg_shape, self.pv_acc_dtype)
             is_zero_output = (
                 scale0 == Float32(0.0) and scale1 == Float32(0.0)
             )
@@ -1600,8 +1600,7 @@ class SparseDecodeAttentionForwardSm100:
 
         frg_count: cutlass.Constexpr[int] = self.head_dim // corr_tile_size
         for fi in cutlass.range_constexpr(frg_count):
-            tOrO_frg = cute.make_fragment(
-                tOrO_t2r_shape, self.pv_acc_dtype)
+            tOrO_frg = cute.make_rmem_tensor(tOrO_t2r_shape, self.pv_acc_dtype)
             tOtO_t2r_i = cute.make_tensor(
                 tOtO_t2r.iterator + fi * corr_tile_size,
                 tOtO_t2r.layout,
@@ -1899,7 +1898,7 @@ class SparseDecodeAttentionForwardSm100:
         tmem_load_atom_pre: cute.CopyAtom,
         tmem_store_atom_pre: cute.CopyAtom,
         tmem_store_vec_atom_pre: cute.CopyAtom,
-        thr_mma_qk_pre: cute.core.ThrMma,
+        thr_mma_qk_pre: cute.ThrMma,
         pipeline_s_p_o: pipeline.PipelineAsync,
         pipeline_p_lastsplit: pipeline.PipelineAsync,
         pipeline_sm_stats: pipeline.PipelineAsync,
